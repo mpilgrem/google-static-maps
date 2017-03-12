@@ -1,5 +1,5 @@
 name:                google-static-maps
-version:             0.1.0.0
+version:             0.2.0.0
 synopsis:            Bindings to the Google Static Maps API
 description:         The <https://developers.google.com/maps/documentation/static-maps/intro Google Static Maps API>
                      returns a map as an image via an HTTP request. This library
@@ -19,6 +19,7 @@ maintainer:          public@pilgrem.com
 copyright:           Mike Pilgrem
 category:            Web
 build-type:          Simple
+extra-source-files:  changelog.md
 cabal-version:       >=1.10
 
 library
@@ -28,6 +29,7 @@ library
                      , bytedump >= 1.0 && < 1.1
                      , http-client >= 0.5 && < 0.6
                      , JuicyPixels >= 3.2 && < 3.3
+                     , network-uri >= 2.6 && < 2.7
                      , servant >= 0.9 && < 0.10
                      , servant-client >= 0.9 && < 0.10
                      , servant-JuicyPixels >= 0.3 && < 0.4

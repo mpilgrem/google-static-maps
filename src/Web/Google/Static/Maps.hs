@@ -15,15 +15,15 @@
 -- 
 -- The <https://developers.google.com/maps/documentation/static-maps/intro Google Static Maps API>
 -- returns a map as an image via an HTTP request. This library provides bindings
--- in Haskell to that API.
+-- in Haskell to that API (version 2).
 --
 -- NB: The use of the Google Static Maps API services is subject to the
 -- <https://developers.google.com/maps/terms Google Maps APIs Terms of Service>,
 -- which terms restrict the use of content.
 --
 -- The following are not yet implemented: certain optional parameters
--- ('language', 'region' and 'signature'); address locations; non-PNG image
--- formats; custom marker icons; and encoded polyline paths.
+-- ('language', and 'region'); address locations; non-PNG image
+-- formats; and encoded polyline paths.
 --
 -- The code below is an example console application to test the use of the
 -- library with the Google Static Maps API.
@@ -54,8 +54,8 @@
 -- >         w      = 400
 -- >         h      = 400
 -- >         size   = Size w h
--- >     result <- staticmap mgr apiKey center zoom size Nothing Nothing []
--- >                   Nothing [] [] Nothing
+-- >     result <- staticmap mgr apiKey Nothing center zoom size Nothing Nothing
+-- >                   [] Nothing [] [] Nothing
 -- >     case result of
 -- >         Right response -> do
 -- >             let picture = fromJust $ fromDynamicImage response
@@ -71,6 +71,7 @@ module Web.Google.Static.Maps
        , api
          -- * Types
        , Key               (..)
+       , Signature         (..)
        , Center            (..)
        , Location          (..)
        , Zoom              (..)
@@ -89,6 +90,10 @@ module Web.Google.Static.Maps
        , MarkerColor       (..)
        , MarkerLabel       (..)
        , StdColor          (..)
+       , URI               (..)
+       , URIAuth           (..)
+       , Anchor            (..)
+       , StdAnchor         (..)
        , Path              (..)
        , PathStyle         (..)
        , PathWeight        (..)
@@ -106,6 +111,7 @@ import Data.Text (Text)
 import qualified Data.Text as T (append, concat, pack)
 import Data.Word (Word8)
 import Network.HTTP.Client (Manager)
+import Network.URI (URI (..), URIAuth (..), uriToString)
 import Servant.API ((:>), Get, QueryParam, QueryParams, ToHttpApiData (..))
 import Servant.Client (BaseUrl (..), client, ClientEnv (..), ClientM,
     runClientM, Scheme (..), ServantError)
@@ -114,6 +120,10 @@ import Text.Bytedump (hexString)
 
 -- | API key
 newtype Key = Key Text
+    deriving (Eq, Show, ToHttpApiData)
+
+-- | Signature
+newtype Signature = Signature Text
     deriving (Eq, Show, ToHttpApiData)
 
 -- | Center of the map: not required if the map includes markers or paths.
@@ -239,46 +249,43 @@ data Feature
     | TransitStationBus
     | TransitStationRail
     | Water
-    deriving (Eq)
-
-instance Show Feature where
-    show feature = case feature of
-        AllFeatures -> "all"
-        Administrative -> "administrative"
-        AdministrativeCountry -> "administrative.country"
-        AdministrativeLandParcel -> "administrative.land_parcel"
-        AdministrativeLocality -> "administrative.locality"
-        AdministrativeNeighborhood -> "administrative.neighborhood"
-        AdministrativeProvince -> "administrative.province"
-        Landscape -> "landscape"
-        LandscapeManMade -> "landscape.man_made"
-        LandscapeNatural -> "landscape.natural"
-        LandscapeNaturalLandcover -> "landscape.landcover"
-        LandscapeNaturalTerrain -> "landscape.terrain"
-        Poi -> "poi"
-        PoiAttraction -> "poi.attraction"
-        PoiBusiness -> "poi.business"
-        PoiGovernment -> "poi.government"
-        PoiMedical -> "poi.medical"
-        PoiPark -> "poi.park"
-        PoiPlaceOfWorship -> "poi.place_of_worship"
-        PoiSchool -> "poi.school"
-        PoiSportsComplex -> "poi.sports_complex"
-        Road -> "road"
-        RoadArterial -> "road.arterial"
-        RoadHighway -> "road.highway"
-        RoadHighwayControlledAccess -> "road.controlled_access"
-        RoadLocal -> "road.local"
-        Transit -> "transit"
-        TransitLine -> "transit.line"
-        TransitStation -> "transit.station"
-        TransitStationAirport -> "transit.station.airport"
-        TransitStationBus -> "transit.station.bus"
-        TransitStationRail -> "transit.station.rail"
-        Water -> "water"
+    deriving (Eq, Show)
 
 instance ToHttpApiData Feature where
-    toUrlPiece = T.pack . show
+    toUrlPiece feature = case feature of
+        AllFeatures                 -> "all"
+        Administrative              -> "administrative"
+        AdministrativeCountry       -> "administrative.country"
+        AdministrativeLandParcel    -> "administrative.land_parcel"
+        AdministrativeLocality      -> "administrative.locality"
+        AdministrativeNeighborhood  -> "administrative.neighborhood"
+        AdministrativeProvince      -> "administrative.province"
+        Landscape                   -> "landscape"
+        LandscapeManMade            -> "landscape.man_made"
+        LandscapeNatural            -> "landscape.natural"
+        LandscapeNaturalLandcover   -> "landscape.landcover"
+        LandscapeNaturalTerrain     -> "landscape.terrain"
+        Poi                         -> "poi"
+        PoiAttraction               -> "poi.attraction"
+        PoiBusiness                 -> "poi.business"
+        PoiGovernment               -> "poi.government"
+        PoiMedical                  -> "poi.medical"
+        PoiPark                     -> "poi.park"
+        PoiPlaceOfWorship           -> "poi.place_of_worship"
+        PoiSchool                   -> "poi.school"
+        PoiSportsComplex            -> "poi.sports_complex"
+        Road                        -> "road"
+        RoadArterial                -> "road.arterial"
+        RoadHighway                 -> "road.highway"
+        RoadHighwayControlledAccess -> "road.controlled_access"
+        RoadLocal                   -> "road.local"
+        Transit                     -> "transit"
+        TransitLine                 -> "transit.line"
+        TransitStation              -> "transit.station"
+        TransitStationAirport       -> "transit.station.airport"
+        TransitStationBus           -> "transit.station.bus"
+        TransitStationRail          -> "transit.station.rail"
+        Water                       -> "water"
 
 -- | Feature element
 data Element
@@ -291,22 +298,19 @@ data Element
     | LabelsText
     | LabelsTextFill
     | LabelsTextStroke
-    deriving (Eq)
-
-instance Show Element where
-    show element = case element of
-        AllElements -> "all"
-        Geometry -> "geometry"
-        GeometryFill -> "geometry.fill"
-        GeometryStroke -> "geometry.stroke"
-        Labels -> "labels"
-        LabelsIcon -> "labels.icon"
-        LabelsText -> "labels.text"
-        LabelsTextFill -> "labels.text.fill"
-        LabelsTextStroke -> "labels.text.stroke"
+    deriving (Eq, Show)
 
 instance ToHttpApiData Element where
-    toUrlPiece = T.pack . show
+    toUrlPiece element = case element of
+        AllElements      -> "all"
+        Geometry         -> "geometry"
+        GeometryFill     -> "geometry.fill"
+        GeometryStroke   -> "geometry.stroke"
+        Labels           -> "labels"
+        LabelsIcon       -> "labels.icon"
+        LabelsText       -> "labels.text"
+        LabelsTextFill   -> "labels.text.fill"
+        LabelsTextStroke -> "labels.text.stroke"
 
 -- | Map style operation
 data MapStyleOp
@@ -349,16 +353,13 @@ data Visibility
     = On
     | Off
     | Simplified  -- ^ Removes some, not all, style features
-    deriving (Eq)
+    deriving (Eq, Show)
 
-instance Show Visibility where
-    show visibility = case visibility of
+instance ToHttpApiData Visibility where
+    toUrlPiece visibility = case visibility of
         On         -> "on"
         Off        -> "off"
         Simplified -> "simplified"
-
-instance ToHttpApiData Visibility where
-    toUrlPiece = T.pack . show
 
 -- | Markers
 data Markers = Markers (Maybe MarkerStyle) [Location]
@@ -368,7 +369,7 @@ instance ToHttpApiData Markers where
     toUrlPiece (Markers markerStyleOpt ls)
         | Nothing <- markerStyleOpt
           = toUrlPiece ls
-        | Just (MarkerStyle Nothing Nothing Nothing) <- markerStyleOpt
+        | Just (StdMarkerStyle Nothing Nothing Nothing) <- markerStyleOpt
           = toUrlPiece ls
         | Just markerStyle <- markerStyleOpt
           = case ls of
@@ -376,21 +377,33 @@ instance ToHttpApiData Markers where
                 _  -> T.concat [toUrlPiece markerStyle, "|", toUrlPiece ls]
 
 -- | Marker style
-data MarkerStyle = MarkerStyle
-    { markerSize  :: Maybe MarkerSize
-    , markerColor :: Maybe MarkerColor
-    , markerLabel :: Maybe MarkerLabel
-    } deriving (Eq, Show)
+data MarkerStyle
+    = StdMarkerStyle
+          { markerSize  :: Maybe MarkerSize
+          , markerColor :: Maybe MarkerColor
+          , markerLabel :: Maybe MarkerLabel
+          }
+    | CustomIcon
+          { icon   :: URI
+          , anchor :: Maybe Anchor
+          }
+    deriving (Eq, Show)
 
 instance ToHttpApiData MarkerStyle where
-    toUrlPiece (MarkerStyle ms mc ml) =
-        T.concat $ intersperse pipe opts
+    toUrlPiece markerStyle
+        | StdMarkerStyle ms mc ml <- markerStyle
+          = let size'  = T.append "size:" . toUrlPiece <$> ms
+                color' = T.append "color:" . toUrlPiece <$> mc
+                label' = T.append "label:" . toUrlPiece <$> ml
+                opts     = catMaybes [size', color', label']
+            in  T.concat $ intersperse pipe opts
+        | CustomIcon url ma <- markerStyle
+          = let icon' = T.concat ["icon:", toUrlPiece $ uriToString id url ""]
+            in  case ma of
+                    Nothing -> icon'
+                    Just a -> T.concat [icon', pipe, "anchor:", toUrlPiece a]
       where
         pipe = toUrlPiece ("|" :: Text)
-        sizeUrl  = T.append "size:" . toUrlPiece <$> ms
-        colorUrl = T.append "color:" . toUrlPiece <$> mc
-        labelUrl = T.append "label:" . toUrlPiece <$> ml
-        opts = catMaybes [sizeUrl, colorUrl, labelUrl]
 
 -- | Marker size
 data MarkerSize
@@ -409,14 +422,12 @@ instance ToHttpApiData MarkerSize where
 data MarkerColor
     = MarkerColor Word8 Word8 Word8
     | StdMarkerColor StdColor
-    deriving (Eq)
-
-instance Show MarkerColor where
-    show (MarkerColor r g b) = "0x" ++ hexString r ++ hexString g ++ hexString b
-    show (StdMarkerColor stdColor) = show stdColor
+    deriving (Eq, Show)
 
 instance ToHttpApiData MarkerColor where
-    toUrlPiece colour = T.pack $ show colour
+    toUrlPiece (MarkerColor r g b) = T.pack $ "0x" ++ hexString r ++ hexString g
+        ++ hexString b
+    toUrlPiece (StdMarkerColor stdColor) = toUrlPiece stdColor
 
 -- | Standard colours
 data StdColor
@@ -430,10 +441,10 @@ data StdColor
     | Orange
     | Red
     | White
-    deriving (Eq)
+    deriving (Eq, Show)
 
-instance Show StdColor where
-    show stdColor = case stdColor of
+instance ToHttpApiData StdColor where
+    toUrlPiece stdColor = case stdColor of
         Black  -> "black"
         Brown  -> "brown"
         Green  -> "green"
@@ -448,6 +459,44 @@ instance Show StdColor where
 -- | Marker label character
 newtype MarkerLabel = MarkerLabel Char
     deriving (Eq, Show, ToHttpApiData)
+
+-- | Anchor
+data Anchor
+    = AnchorPoint Int Int
+    | StdAnchor StdAnchor
+    deriving (Eq, Show)
+
+instance ToHttpApiData Anchor where
+    toUrlPiece anchor
+        | AnchorPoint x y <- anchor
+          = T.pack (show x ++ "," ++ show y)
+        | StdAnchor stdAnchor <- anchor
+          = toUrlPiece stdAnchor
+
+-- | Standard anchor points
+data StdAnchor
+    = AnchorTop
+    | AnchorBottom
+    | AnchorLeft
+    | AnchorRight
+    | AnchorCenter
+    | AnchorTopLeft
+    | AnchorTopRight
+    | AnchorBottomLeft
+    | AnchorBottomRight
+    deriving (Eq, Show)
+
+instance ToHttpApiData StdAnchor where
+    toUrlPiece stdAnchor = case stdAnchor of
+        AnchorTop         -> "top"
+        AnchorBottom      -> "bottom"
+        AnchorLeft        -> "left"
+        AnchorRight       -> "right"
+        AnchorCenter      -> "center"
+        AnchorTopLeft     -> "topleft"
+        AnchorTopRight    -> "topright"
+        AnchorBottomLeft  -> "bottomleft"
+        AnchorBottomRight -> "bottomright"
 
 -- | Path
 data Path = Path (Maybe PathStyle) [Location]
@@ -493,16 +542,14 @@ data PathColor
     = PathColor Word8 Word8 Word8
     | PathColorAlpha Word8 Word8 Word8 Word8
     | StdPathColor StdColor
-    deriving (Eq)
-
-instance Show PathColor where
-    show (PathColor r g b) = "0x" ++ hexString r ++ hexString g ++ hexString b
-    show (PathColorAlpha r g b a) = "0x" ++ hexString r ++ hexString g ++
-        hexString b ++ hexString a
-    show (StdPathColor stdColor) = show stdColor
+    deriving (Eq, Show)
 
 instance ToHttpApiData PathColor where
-    toUrlPiece colour = T.pack $ show colour
+    toUrlPiece (PathColor r g b) = T.pack $ "0x" ++ hexString r ++ hexString g
+        ++ hexString b
+    toUrlPiece (PathColorAlpha r g b a) = T.pack $ "0x" ++ hexString r ++
+        hexString g ++ hexString b ++ hexString a
+    toUrlPiece (StdPathColor stdColor) = toUrlPiece stdColor
 
 -- | Path is geodesic
 newtype PathGeodesic = PathGeodesic Bool
@@ -514,7 +561,9 @@ newtype Visible = Visible [Location]
 
 -- | Google Static Maps API
 type GoogleStaticMapsAPI
-    =  QueryParam "key" Key
+    =  "staticmap"
+    :> QueryParam "key" Key
+    :> QueryParam "signature" Signature
     :> QueryParam "center" Center
     :> QueryParam "zoom" Zoom
     :> QueryParam "size" Size
@@ -536,6 +585,7 @@ api = Proxy
 
 staticmap'
     :: Maybe Key
+    -> Maybe Signature
     -> Maybe Center
     -> Maybe Zoom
     -> Maybe Size
@@ -549,14 +599,15 @@ staticmap'
     -> ClientM StaticmapResponse
 staticmap' = client api
 
-googleApis :: BaseUrl
-googleApis = BaseUrl Https "maps.googleapis.com" 443 "/maps/api/staticmap"
+googleMapsApis :: BaseUrl
+googleMapsApis = BaseUrl Https "maps.googleapis.com" 443 "/maps/api"
 
 -- | Retrieve a static map. NB: The use of the Google Static Maps API services
 -- is subject to the <https://developers.google.com/maps/terms Google Maps APIs Terms of Service>.
 staticmap
     :: Manager
     -> Key
+    -> Maybe Signature
     -> Maybe Center
     -> Maybe Zoom
     -> Size
@@ -571,6 +622,7 @@ staticmap
 staticmap
     mgr
     key
+    signatureOpt
     centerOpt
     zoomOpt
     size
@@ -581,6 +633,7 @@ staticmap
     markerss
     paths
     visibleOpt
-    = runClientM (staticmap' (Just key) centerOpt zoomOpt (Just size)
-          scaleOpt formatOpt mapStyles mapTypeOpt markerss paths visibleOpt)
-          (ClientEnv mgr googleApis)
+    = runClientM (staticmap' (Just key) signatureOpt centerOpt zoomOpt
+          (Just size) scaleOpt formatOpt mapStyles mapTypeOpt markerss paths
+          visibleOpt)
+          (ClientEnv mgr googleMapsApis)
