@@ -32,8 +32,6 @@
 -- > 
 -- > module Main (main) where
 -- > 
--- > import Codec.Picture.Saving (imageToPng)               -- package JuicyPixels
--- > import qualified Data.ByteString.Lazy as B (writeFile)
 -- > import Data.Maybe (fromJust)
 -- > import Graphics.Gloss (Display (..), display, white)   -- package gloss
 -- > import Graphics.Gloss.Juicy (fromDynamicImage)         -- package gloss-juicy
@@ -113,14 +111,12 @@ import Data.Word (Word8)
 import Network.HTTP.Client (Manager)
 import Network.URI (URI (..), URIAuth (..), uriToString)
 import Servant.API ((:>), Get, QueryParam, QueryParams, ToHttpApiData (..))
-import Servant.Client (BaseUrl (..), client, ClientEnv (..), ClientM,
-    runClientM, Scheme (..), ServantError)
+import Servant.Client (client, ClientEnv (..), ClientM, runClientM,
+    ServantError)
 import Servant.JuicyPixels (PNG)
 import Text.Bytedump (hexString)
 
--- | API key
-newtype Key = Key Text
-    deriving (Eq, Show, ToHttpApiData)
+import Web.Google.Maps.Common (googleMapsApis, Key (..), Location (..))
 
 -- | Signature
 newtype Signature = Signature Text
@@ -129,21 +125,6 @@ newtype Signature = Signature Text
 -- | Center of the map: not required if the map includes markers or paths.
 newtype Center = Center Location
     deriving (Eq, Show, ToHttpApiData)
-
--- | Location
-data Location = Location
-    { lat :: Double  -- ^ Takes any value between -90 and 90.
-    , lng :: Double  -- ^ Takes any value between -180 and 180.
-    } deriving (Eq, Show)
-
-instance ToHttpApiData Location where
-    toUrlPiece (Location lat' lng') = T.pack (show lat' ++ "," ++ show lng')
-
-instance ToHttpApiData [Location] where
-    toUrlPiece [] = ""
-    toUrlPiece ls = T.concat $ intersperse pipe $ map toUrlPiece ls
-      where
-        pipe = toUrlPiece ("|" :: Text)
 
 -- | Zoom level: the lowest level, in which the whole world can be seen, is 0.
 -- Each succeeding level doubles the precision. Not required if the map includes
@@ -467,10 +448,10 @@ data Anchor
     deriving (Eq, Show)
 
 instance ToHttpApiData Anchor where
-    toUrlPiece anchor
-        | AnchorPoint x y <- anchor
+    toUrlPiece anchor'
+        | AnchorPoint x y <- anchor'
           = T.pack (show x ++ "," ++ show y)
-        | StdAnchor stdAnchor <- anchor
+        | StdAnchor stdAnchor <- anchor'
           = toUrlPiece stdAnchor
 
 -- | Standard anchor points
@@ -598,9 +579,6 @@ staticmap'
     -> Maybe Visible
     -> ClientM StaticmapResponse
 staticmap' = client api
-
-googleMapsApis :: BaseUrl
-googleMapsApis = BaseUrl Https "maps.googleapis.com" 443 "/maps/api"
 
 -- | Retrieve a static map. NB: The use of the Google Static Maps API services
 -- is subject to the <https://developers.google.com/maps/terms Google Maps APIs Terms of Service>.
