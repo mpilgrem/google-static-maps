@@ -2,6 +2,9 @@
 
 * Fix bug in instance of `ToHttpApiData` for `Location`
 
+* Rename certain constructors of `Element` type to avoid name clashes
+  (`Geometry` and `Labels`)
+
 * Move functions and types of anticipated common use to module
   `Web.Google.Maps.Common`
 

@@ -271,10 +271,10 @@ instance ToHttpApiData Feature where
 -- | Feature element
 data Element
     = AllElements
-    | Geometry
+    | AllGeometry
     | GeometryFill
     | GeometryStroke
-    | Labels
+    | AllLabels
     | LabelsIcon
     | LabelsText
     | LabelsTextFill
@@ -284,10 +284,10 @@ data Element
 instance ToHttpApiData Element where
     toUrlPiece element = case element of
         AllElements      -> "all"
-        Geometry         -> "geometry"
+        AllGeometry      -> "geometry"
         GeometryFill     -> "geometry.fill"
         GeometryStroke   -> "geometry.stroke"
-        Labels           -> "labels"
+        AllLabels        -> "labels"
         LabelsIcon       -> "labels.icon"
         LabelsText       -> "labels.text"
         LabelsTextFill   -> "labels.text.fill"
