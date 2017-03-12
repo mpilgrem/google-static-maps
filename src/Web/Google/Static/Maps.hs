@@ -21,9 +21,8 @@
 -- <https://developers.google.com/maps/terms Google Maps APIs Terms of Service>,
 -- which terms restrict the use of content.
 --
--- The following are not yet implemented: certain optional parameters
--- ('language', and 'region'); address locations; non-PNG image
--- formats; and encoded polyline paths.
+-- The following are not yet implemented: non-PNG image formats; and encoded
+-- polyline paths.
 --
 -- The code below is an example console application to test the use of the
 -- library with the Google Static Maps API.
@@ -47,13 +46,15 @@
 -- >         \at https://developers.google.com/maps/terms.\n"
 -- >     mgr <- newManager tlsManagerSettings
 -- >     let apiKey = Key "<REPLACE_THIS_WITH_YOUR_ACTUAL_GOOGLE_API_KEY>"
+-- >         secret = Just $ Secret "<REPLACE_THIS_WITH_YOUR_ACTUAL_GOOGLE_\
+-- >             \URL_SIGNING_SECRET>"  -- If using a digital signature
 -- >         center = Just $ Center (Location 42.165950 (-71.362015))
 -- >         zoom   = Just $ Zoom 17
 -- >         w      = 400
 -- >         h      = 400
 -- >         size   = Size w h
--- >     result <- staticmap mgr apiKey Nothing center zoom size Nothing Nothing
--- >                   [] Nothing [] [] Nothing
+-- >     result <- staticmap mgr apiKey secret center zoom size Nothing Nothing
+-- >                   [] Nothing Nothing Nothing [] [] Nothing
 -- >     case result of
 -- >         Right response -> do
 -- >             let picture = fromJust $ fromDynamicImage response
@@ -69,19 +70,24 @@ module Web.Google.Static.Maps
        , api
          -- * Types
        , Key               (..)
+       , Secret            (..)
        , Signature         (..)
        , Center            (..)
        , Location          (..)
+       , LatLng            (..)
+       , Address           (..)
        , Zoom              (..)
        , Size              (..)
        , Scale             (..)
        , Format            (..)
-       , MapType           (..)
        , MapStyle          (..)
        , Feature           (..)
        , Element           (..)
        , MapStyleOp        (..)
        , Visibility        (..)
+       , MapType           (..)
+       , Language          (..)
+       , Region            (..)
        , Markers           (..)
        , MarkerStyle       (..)
        , MarkerSize        (..)
@@ -102,21 +108,37 @@ module Web.Google.Static.Maps
        ) where
 
 import Codec.Picture.Types (DynamicImage (..))
+import Crypto.Hash.Algorithms (SHA1)
+import Crypto.MAC.HMAC (HMAC, hmac)
+import Data.ByteArray (convert)
+import qualified Data.ByteString as B (pack, unpack)
+import Data.ByteString.Base64.URL (decode, encode)
+import qualified Data.ByteString.Lazy as L (unpack)
+import Data.ByteString.Builder (stringUtf8, toLazyByteString)
+import Data.ByteString.UTF8 as UTF8 (fromString)
 import Data.List (intersperse)
 import Data.Maybe (catMaybes)
 import Data.Proxy (Proxy (..))
+import Data.String.Utils (replace)
 import Data.Text (Text)
 import qualified Data.Text as T (append, concat, pack)
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Data.Word (Word8)
+import Debug.Trace (trace)
 import Network.HTTP.Client (Manager)
 import Network.URI (URI (..), URIAuth (..), uriToString)
-import Servant.API ((:>), Get, QueryParam, QueryParams, ToHttpApiData (..))
-import Servant.Client (client, ClientEnv (..), ClientM, runClientM,
-    ServantError)
+import Servant.API ((:>), Get, QueryParam, QueryParams, safeLink,
+    ToHttpApiData (..))
+import Servant.Client (BaseUrl (..), client, ClientEnv (..), ClientM,
+    runClientM, ServantError)
 import Servant.JuicyPixels (PNG)
 import Text.Bytedump (hexString)
+import Web.Google.Maps.Common (Address (..), googleMapsApis, Key (..),
+    Language (..), LatLng (..), Location (..), Region (..))
 
-import Web.Google.Maps.Common (googleMapsApis, Key (..), Location (..))
+-- | Secret for digital signature
+newtype Secret = Secret Text
+    deriving (Eq, Show)
 
 -- | Signature
 newtype Signature = Signature Text
@@ -166,31 +188,15 @@ instance ToHttpApiData Format where
         Png8  -> "png8"
         Png32 -> "png32"
 
--- | Map type
-data MapType
-    = RoadMap    -- ^ The default value.
-    | Satellite
-    | Hybrid
-    | Terrain
-    deriving (Eq, Show)
-
-instance ToHttpApiData MapType where
-    toUrlPiece mapType = case mapType of
-        RoadMap   -> "roadmap"
-        Satellite -> "satellite"
-        Hybrid    -> "hybrid"
-        Terrain   -> "terrain"
-
 -- | MapStyle
 data MapStyle = MapStyle (Maybe Feature) (Maybe Element) [MapStyleOp]
     deriving (Eq, Show)
 
 instance ToHttpApiData MapStyle where
     toUrlPiece (MapStyle featureOpt elementOpt ops) =
-        T.concat $ intersperse pipe $ catMaybes [featureUrl, elementUrl] ++
+        T.concat $ intersperse "|" $ catMaybes [featureUrl, elementUrl] ++
             [opsUrl]
       where
-        pipe = toUrlPiece ("|" :: Text)
         featureUrl = T.append "feature:" . toUrlPiece <$> featureOpt
         elementUrl = T.append "element:" . toUrlPiece <$> elementOpt
         opsUrl = toUrlPiece ops
@@ -325,9 +331,7 @@ instance ToHttpApiData MapStyleOp where
           = T.concat ["weight:", toUrlPiece w]
 
 instance ToHttpApiData [MapStyleOp] where
-    toUrlPiece ops = T.concat $ intersperse pipe $ map toUrlPiece ops
-      where
-        pipe = toUrlPiece ("|" :: Text)
+    toUrlPiece ops = T.concat $ intersperse "|" $ map toUrlPiece ops
 
 -- | Visibility
 data Visibility
@@ -341,6 +345,21 @@ instance ToHttpApiData Visibility where
         On         -> "on"
         Off        -> "off"
         Simplified -> "simplified"
+
+-- | Map type
+data MapType
+    = RoadMap    -- ^ The default value.
+    | Satellite
+    | Hybrid
+    | Terrain
+    deriving (Eq, Show)
+
+instance ToHttpApiData MapType where
+    toUrlPiece mapType = case mapType of
+        RoadMap   -> "roadmap"
+        Satellite -> "satellite"
+        Hybrid    -> "hybrid"
+        Terrain   -> "terrain"
 
 -- | Markers
 data Markers = Markers (Maybe MarkerStyle) [Location]
@@ -377,14 +396,12 @@ instance ToHttpApiData MarkerStyle where
                 color' = T.append "color:" . toUrlPiece <$> mc
                 label' = T.append "label:" . toUrlPiece <$> ml
                 opts     = catMaybes [size', color', label']
-            in  T.concat $ intersperse pipe opts
+            in  T.concat $ intersperse "|" opts
         | CustomIcon url ma <- markerStyle
           = let icon' = T.concat ["icon:", toUrlPiece $ uriToString id url ""]
             in  case ma of
                     Nothing -> icon'
-                    Just a -> T.concat [icon', pipe, "anchor:", toUrlPiece a]
-      where
-        pipe = toUrlPiece ("|" :: Text)
+                    Just a -> T.concat [icon', "|", "anchor:", toUrlPiece a]
 
 -- | Marker size
 data MarkerSize
@@ -504,9 +521,8 @@ data PathStyle = PathStyle
 
 instance ToHttpApiData PathStyle where
     toUrlPiece (PathStyle mw mc mfc mg) =
-        T.concat $ intersperse pipe opts
+        T.concat $ intersperse "|" opts
       where
-        pipe         = toUrlPiece ("|" :: Text)
         weightUrl    = T.append "weight:" . toUrlPiece <$> mw
         colorUrl     = T.append "color:" . toUrlPiece <$> mc
         fillColorUrl = T.append "fillcolor:" . toUrlPiece <$> mfc
@@ -543,18 +559,20 @@ newtype Visible = Visible [Location]
 -- | Google Static Maps API
 type GoogleStaticMapsAPI
     =  "staticmap"
-    :> QueryParam "key" Key
-    :> QueryParam "signature" Signature
-    :> QueryParam "center" Center
-    :> QueryParam "zoom" Zoom
-    :> QueryParam "size" Size
-    :> QueryParam "scale" Scale
-    :> QueryParam "format" Format
-    :> QueryParams "style" MapStyle
-    :> QueryParam "maptype" MapType
-    :> QueryParams "markers" Markers
-    :> QueryParams "path" Path
-    :> QueryParam "visible" Visible
+    :> QueryParam  "key"       Key
+    :> QueryParam  "center"    Center
+    :> QueryParam  "zoom"      Zoom
+    :> QueryParam  "size"      Size
+    :> QueryParam  "scale"     Scale
+    :> QueryParam  "format"    Format
+    :> QueryParams "style"     MapStyle
+    :> QueryParam  "maptype"   MapType
+    :> QueryParam  "language"  Language
+    :> QueryParam  "region"    Region
+    :> QueryParams "markers"   Markers
+    :> QueryParams "path"      Path
+    :> QueryParam  "visible"   Visible
+    :> QueryParam  "signature" Signature
     :> Get '[PNG] StaticmapResponse
 
 -- | StaticmapResponse
@@ -566,7 +584,6 @@ api = Proxy
 
 staticmap'
     :: Maybe Key
-    -> Maybe Signature
     -> Maybe Center
     -> Maybe Zoom
     -> Maybe Size
@@ -574,9 +591,12 @@ staticmap'
     -> Maybe Format
     -> [MapStyle]
     -> Maybe MapType
+    -> Maybe Language
+    -> Maybe Region
     -> [Markers]
     -> [Path]
     -> Maybe Visible
+    -> Maybe Signature
     -> ClientM StaticmapResponse
 staticmap' = client api
 
@@ -585,7 +605,7 @@ staticmap' = client api
 staticmap
     :: Manager
     -> Key
-    -> Maybe Signature
+    -> Maybe Secret
     -> Maybe Center
     -> Maybe Zoom
     -> Size
@@ -593,6 +613,8 @@ staticmap
     -> Maybe Format
     -> [MapStyle]
     -> Maybe MapType
+    -> Maybe Language
+    -> Maybe Region
     -> [Markers]
     -> [Path]
     -> Maybe Visible
@@ -600,7 +622,7 @@ staticmap
 staticmap
     mgr
     key
-    signatureOpt
+    secretOpt
     centerOpt
     zoomOpt
     size
@@ -608,10 +630,41 @@ staticmap
     formatOpt
     mapStyles
     mapTypeOpt
+    languageOpt
+    regionOpt
     markerss
     paths
     visibleOpt
-    = runClientM (staticmap' (Just key) signatureOpt centerOpt zoomOpt
-          (Just size) scaleOpt formatOpt mapStyles mapTypeOpt markerss paths
-          visibleOpt)
-          (ClientEnv mgr googleMapsApis)
+    = case secretOpt of
+          Nothing -> runClientM (eval staticmap' Nothing)
+                                (ClientEnv mgr googleMapsApis)
+          Just secret -> do
+              let url  = fixUrl $ eval (safeLink api api) Nothing
+                  signatureOpt = sign secret googleMapsApis url
+              runClientM (eval staticmap' signatureOpt)
+                         (ClientEnv mgr googleMapsApis)
+        where
+          eval f = f (Just key) centerOpt zoomOpt (Just size) scaleOpt formatOpt
+                       mapStyles mapTypeOpt languageOpt regionOpt markerss paths
+                       visibleOpt
+
+sign :: Secret -> BaseUrl -> URI -> Maybe Signature
+sign (Secret secret) baseUrl url = do
+    secret' <- either (const Nothing) Just (decode $ encodeUtf8 secret)
+    let url'       = UTF8.fromString $ baseUrlPath baseUrl ++ "/" ++ uriToString id url ""
+        signature  = hmac secret' url' :: HMAC SHA1
+        signature' = decodeUtf8 $ encode $ convert signature
+    return $ Signature signature'
+
+-- A hack required because in package servant-0.9.1.1, the function `linkURI`
+-- adds unwanted `[]` to specified parameter names for QueryParams (reported as
+-- issue #715). The result is that `safeLink` does not return the correct URI.
+-- The hack is not ideal as there is a very small but positive probability that
+-- another part of the URI will contain by coincidence the characters that need
+-- to be replaced.
+fixUrl :: URI -> URI
+fixUrl url = url {uriQuery = uri'}
+  where
+    uri  = uriQuery url
+    uri' = replace "path[]=" "path=" $ replace "markers[]=" "markers=" $ replace
+        "style[]=" "style=" uri

@@ -1,3 +1,9 @@
+# 0.4.0.0
+
+* Implement `language` and `region` parameters
+
+* Implement digital signatures
+
 # 0.3.0.0
 
 * Fix bug in instance of `ToHttpApiData` for `Location`
@@ -10,7 +16,7 @@
 
 # 0.2.0.0
 
-* Implementation of `signature` and custom marker icons
+* Implement `signature` and custom marker icons
 
 * Move `staticmap` from the end of the base URL to the start of the API type
 
