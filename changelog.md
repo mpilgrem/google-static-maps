@@ -1,3 +1,8 @@
+# 0.5.0.0
+
+* Depend on more recent version of `servant` package and, consequently,
+  `servant-client`, `aeson` and `cryptonite` packages 
+
 # 0.4.0.0
 
 * Implement `language` and `region` parameters

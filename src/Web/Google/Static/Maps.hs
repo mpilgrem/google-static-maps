@@ -132,6 +132,7 @@ import Servant.API ((:>), Get, QueryParam, QueryParams, safeLink,
 import Servant.Client (BaseUrl (..), client, ClientEnv (..), ClientM,
     runClientM, ServantError)
 import Servant.JuicyPixels (PNG)
+import Servant.Utils.Links (LinkArrayElementStyle (..), linkURI')
 import Text.Bytedump (hexString)
 import Web.Google.Maps.Common (Address (..), googleMapsApis, Key (..),
     Language (..), LatLng (..), Location (..), Region (..))
@@ -639,14 +640,15 @@ staticmap
           Nothing -> runClientM (eval staticmap' Nothing)
                                 (ClientEnv mgr googleMapsApis)
           Just secret -> do
-              let url  = fixUrl $ eval (safeLink api api) Nothing
+              let url = linkURI $ eval (safeLink api api) Nothing
                   signatureOpt = sign secret googleMapsApis url
               runClientM (eval staticmap' signatureOpt)
                          (ClientEnv mgr googleMapsApis)
         where
+          linkURI = linkURI' LinkArrayElementPlain
           eval f = f (Just key) centerOpt zoomOpt (Just size) scaleOpt formatOpt
-                       mapStyles mapTypeOpt languageOpt regionOpt markerss paths
-                       visibleOpt
+                     mapStyles mapTypeOpt languageOpt regionOpt markerss paths
+                     visibleOpt
 
 sign :: Secret -> BaseUrl -> URI -> Maybe Signature
 sign (Secret secret) baseUrl url = do
@@ -655,16 +657,3 @@ sign (Secret secret) baseUrl url = do
         signature  = hmac secret' url' :: HMAC SHA1
         signature' = decodeUtf8 $ encode $ convert signature
     return $ Signature signature'
-
--- A hack required because in package servant-0.9.1.1, the function `linkURI`
--- adds unwanted `[]` to specified parameter names for QueryParams (reported as
--- issue #715). The result is that `safeLink` does not return the correct URI.
--- The hack is not ideal as there is a very small but positive probability that
--- another part of the URI will contain by coincidence the characters that need
--- to be replaced.
-fixUrl :: URI -> URI
-fixUrl url = url {uriQuery = uri'}
-  where
-    uri  = uriQuery url
-    uri' = replace "path[]=" "path=" $ replace "markers[]=" "markers=" $ replace
-        "style[]=" "style=" uri
