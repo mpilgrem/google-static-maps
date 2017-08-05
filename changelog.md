@@ -1,7 +1,11 @@
+# 0.5.0.1
+
+* Update dependencies for GHC 8.2.1 and relax lower bounds.
+
 # 0.5.0.0
 
 * Depend on more recent version of `servant` package and, consequently,
-  `servant-client`, `aeson` and `cryptonite` packages 
+  `servant-client`, `aeson` and `cryptonite` packages
 
 # 0.4.0.0
 

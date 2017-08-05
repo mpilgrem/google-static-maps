@@ -10,9 +10,9 @@
 -- Copyright   : (c) Mike Pilgrem 2017
 -- Maintainer  : public@pilgrem.com
 -- Stability   : experimental
--- 
+--
 -- This module has no connection with Google Inc. or its affiliates.
--- 
+--
 -- The <https://developers.google.com/maps/documentation/static-maps/intro Google Static Maps API>
 -- returns a map as an image via an HTTP request. This library provides bindings
 -- in Haskell to that API (version 2).
@@ -28,9 +28,9 @@
 -- library with the Google Static Maps API.
 --
 -- > {-# LANGUAGE OverloadedStrings #-}
--- > 
+-- >
 -- > module Main (main) where
--- > 
+-- >
 -- > import Data.Maybe (fromJust)
 -- > import Graphics.Gloss (Display (..), display, white)   -- package gloss
 -- > import Graphics.Gloss.Juicy (fromDynamicImage)         -- package gloss-juicy
@@ -38,7 +38,7 @@
 -- > import Network.HTTP.Client.TLS (tlsManagerSettings)
 -- > import Web.Google.Static.Maps (Center (..), Key (..), Location (..), Size (..),
 -- >     staticmap, StaticmapResponse (..), Zoom (..))
--- > 
+-- >
 -- > main :: IO ()
 -- > main = do
 -- >     putStrLn "A test of the Google Static Maps API.\nNB: The use of the \
@@ -60,7 +60,7 @@
 -- >             let picture = fromJust $ fromDynamicImage response
 -- >                 title   = "Test Google Static Maps API"
 -- >                 window  = InWindow title (w, h) (10, 10)
--- >             display window white picture 
+-- >             display window white picture
 -- >         Left err -> putStrLn $ "Error! Result:\n" ++ show err
 module Web.Google.Static.Maps
        ( -- * Functions
@@ -119,7 +119,6 @@ import Data.ByteString.UTF8 as UTF8 (fromString)
 import Data.List (intersperse)
 import Data.Maybe (catMaybes)
 import Data.Proxy (Proxy (..))
-import Data.String.Utils (replace)
 import Data.Text (Text)
 import qualified Data.Text as T (append, concat, pack)
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
