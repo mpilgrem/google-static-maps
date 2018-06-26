@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP                        #-}
 {-# LANGUAGE DataKinds                  #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
@@ -7,7 +8,7 @@
 -- |
 -- Module      : Web.Google.Static.Maps
 -- Description : Bindings to the Google Static Maps API
--- Copyright   : (c) Mike Pilgrem 2017
+-- Copyright   : (c) Mike Pilgrem 2017, 2018
 -- Maintainer  : public@pilgrem.com
 -- Stability   : experimental
 --
@@ -637,12 +638,22 @@ staticmap
     visibleOpt
     = case secretOpt of
           Nothing -> runClientM (eval staticmap' Nothing)
+-- CookieJar supported from servant-client-0.13
+#if MIN_VERSION_servant_client(0,13,0)
+                                (ClientEnv mgr googleMapsApis Nothing)
+#else
                                 (ClientEnv mgr googleMapsApis)
+#endif
           Just secret -> do
               let url = linkURI $ eval (safeLink api api) Nothing
                   signatureOpt = sign secret googleMapsApis url
               runClientM (eval staticmap' signatureOpt)
+-- CookieJar supported from servant-client-0.13
+#if MIN_VERSION_servant_client(0,13,0)
+                         (ClientEnv mgr googleMapsApis Nothing)
+#else
                          (ClientEnv mgr googleMapsApis)
+#endif
         where
           linkURI = linkURI' LinkArrayElementPlain
           eval f = f (Just key) centerOpt zoomOpt (Just size) scaleOpt formatOpt

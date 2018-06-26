@@ -1,6 +1,7 @@
-resolver: nightly-2017-09-01
+resolver: nightly-2018-06-26
 packages:
 - '.'
-extra-deps: []
+extra-deps:
+- servant-JuicyPixels-0.3.0.4
 flags: {}
 extra-package-dbs: []
