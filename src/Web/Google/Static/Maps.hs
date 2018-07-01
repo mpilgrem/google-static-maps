@@ -33,8 +33,8 @@
 -- > module Main (main) where
 -- >
 -- > import Data.Maybe (fromJust)
--- > import Graphics.Gloss (Display (..), display, white)   -- package gloss
--- > import Graphics.Gloss.Juicy (fromDynamicImage)         -- package gloss-juicy
+-- > import Graphics.Gloss (Display (..), display, white)  -- package gloss
+-- > import Graphics.Gloss.Juicy (fromDynamicImage)        -- package gloss-juicy
 -- > import Network.HTTP.Client (newManager)
 -- > import Network.HTTP.Client.TLS (tlsManagerSettings)
 -- > import Web.Google.Static.Maps (Center (..), Key (..), Location (..), Size (..),
@@ -42,27 +42,28 @@
 -- >
 -- > main :: IO ()
 -- > main = do
--- >     putStrLn "A test of the Google Static Maps API.\nNB: The use of the \
--- >         \API services is subject to the Google Maps APIs Terms of Serivce \
--- >         \at https://developers.google.com/maps/terms.\n"
--- >     mgr <- newManager tlsManagerSettings
--- >     let apiKey = Key "<REPLACE_THIS_WITH_YOUR_ACTUAL_GOOGLE_API_KEY>"
--- >         secret = Just $ Secret "<REPLACE_THIS_WITH_YOUR_ACTUAL_GOOGLE_\
--- >             \URL_SIGNING_SECRET>"  -- If using a digital signature
--- >         center = Just $ Center (Location 42.165950 (-71.362015))
--- >         zoom   = Just $ Zoom 17
--- >         w      = 400
--- >         h      = 400
--- >         size   = Size w h
--- >     result <- staticmap mgr apiKey secret center zoom size Nothing Nothing
--- >                   [] Nothing Nothing Nothing [] [] Nothing
--- >     case result of
--- >         Right response -> do
--- >             let picture = fromJust $ fromDynamicImage response
--- >                 title   = "Test Google Static Maps API"
--- >                 window  = InWindow title (w, h) (10, 10)
--- >             display window white picture
--- >         Left err -> putStrLn $ "Error! Result:\n" ++ show err
+-- >   putStrLn $ "A test of the Google Static Maps API.\nNB: The use of " ++
+-- >     "the API services is subject to the Google Maps APIs Terms of " ++
+-- >     "Serivce at https://developers.google.com/maps/terms.\n"
+-- >   mgr <- newManager tlsManagerSettings
+-- >   let apiKey = Key "<REPLACE_THIS_WITH_YOUR_ACTUAL_GOOGLE_API_KEY>"
+-- >       -- If using a digital signature ...
+-- >       secret = Just $ Secret
+-- >         "<REPLACE_THIS_WITH_YOUR_ACTUAL_GOOGLE_URL_SIGNING_SECRET>"
+-- >       center = Just $ Center (Location 42.165950 (-71.362015))
+-- >       zoom   = Just $ Zoom 17
+-- >       w      = 400
+-- >       h      = 400
+-- >       size   = Size w h
+-- >   result <- staticmap mgr apiKey secret center zoom size Nothing Nothing
+-- >               [] Nothing Nothing Nothing [] [] Nothing
+-- >   case result of
+-- >     Right response -> do
+-- >       let picture = fromJust $ fromDynamicImage response
+-- >           title   = "Test Google Static Maps API"
+-- >           window  = InWindow title (w, h) (10, 10)
+-- >       display window white picture
+-- >     Left err -> putStrLn $ "Error! Result:\n" ++ show err
 module Web.Google.Static.Maps
        ( -- * Functions
          staticmap
