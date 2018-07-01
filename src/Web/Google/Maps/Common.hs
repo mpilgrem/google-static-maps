@@ -10,7 +10,7 @@
 -- Copyright   : (c) Mike Pilgrem 2017
 -- Maintainer  : public@pilgrem.com
 -- Stability   : experimental
--- 
+--
 -- This module has no connection with Google Inc. or its affiliates.
 module Web.Google.Maps.Common
     ( -- * Functions
@@ -26,7 +26,6 @@ module Web.Google.Maps.Common
 
 import Data.Aeson (FromJSON)
 import Data.Double.Conversion.Text (toFixed)
-import Data.Either (Either (..))
 import Data.Eq (Eq)
 import Data.Function (($))
 import Data.List (intersperse, map)
