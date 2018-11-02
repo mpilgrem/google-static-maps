@@ -129,7 +129,7 @@ import Servant.API ((:>), Get, QueryParam, QueryParams, safeLink,
 import Servant.Client (BaseUrl (..), client, ClientEnv (ClientEnv), ClientM,
     runClientM, ServantError)
 import Servant.JuicyPixels (PNG)
-import Servant.Utils.Links (LinkArrayElementStyle (..), linkURI')
+import Servant.Links (LinkArrayElementStyle (..), linkURI')
 import Text.Bytedump (hexString)
 import Web.Google.Maps.Common (Address (..), googleMapsApis, Key (..),
     Language (..), LatLng (..), Location (..), Region (..))

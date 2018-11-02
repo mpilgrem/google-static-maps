@@ -1,5 +1,5 @@
 name:                google-static-maps
-version:             0.5.0.2
+version:             0.5.0.3
 synopsis:            Bindings to the Google Static Maps API
 description:         The <https://developers.google.com/maps/documentation/static-maps/intro Google Static Maps API>
                      returns a map as an image via an HTTP request. This library
@@ -26,7 +26,7 @@ library
   hs-source-dirs:      src
   exposed-modules:     Web.Google.Static.Maps
                      , Web.Google.Maps.Common
-  build-depends:       base >= 4.8 && < 4.12
+  build-depends:       base >= 4.8 && < 4.13
                      , base64-bytestring >= 0.1.1 && < 1.1
                      , bytestring >= 0.10 && < 0.11
                      , aeson >= 0.7 && < 1.5
@@ -34,10 +34,10 @@ library
                      , cryptonite >= 0.1 && < 0.26
                      , double-conversion >= 0.2 && < 2.1
                      , http-client >= 0.2 && < 0.6
-                     , JuicyPixels >= 1.0 && < 3.3
+                     , JuicyPixels >= 1.0 && < 3.4
                      , memory >= 0.1 && < 0.15
                      , network-uri >= 2.6 && < 2.7
-                     , servant >= 0.11 && < 0.15
+                     , servant >= 0.14.1 && < 0.15
                      , servant-client >= 0.11 && < 0.15
                      , servant-JuicyPixels >= 0.3 && < 0.4
                      , text >= 1.0 && < 1.3

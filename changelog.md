@@ -1,3 +1,7 @@
+# 0.5.0.3
+
+* Update dependencies for GHC 8.6.1
+
 # 0.5.0.2
 
 * Update dependencies for GHC 8.4.3
