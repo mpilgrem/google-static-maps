@@ -7,6 +7,8 @@
 
 * Update `Web.Google.Maps.Common.Language` data constructors
 
+* Update dependencies for GHC 8.6.2 and revisit upper bounds
+
 # 0.5.0.3
 
 * Update dependencies for GHC 8.6.1
