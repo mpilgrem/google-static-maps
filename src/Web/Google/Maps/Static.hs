@@ -6,27 +6,31 @@
 {-# LANGUAGE TypeOperators              #-}
 
 -- |
--- Module      : Web.Google.Static.Maps
--- Description : Bindings to the Google Static Maps API
+-- Module      : Web.Google.Maps.Static
+-- Description : Bindings to the Google Maps Static API (formerly Static Maps
+--               API)
 -- Copyright   : (c) Mike Pilgrem 2017, 2018
 -- Maintainer  : public@pilgrem.com
 -- Stability   : experimental
 --
 -- This module has no connection with Google Inc. or its affiliates.
 --
--- The <https://developers.google.com/maps/documentation/static-maps/intro Google Static Maps API>
+-- The <https://developers.google.com/maps/documentation/maps-static/intro Google Maps Static API>
 -- returns a map as an image via an HTTP request. This library provides bindings
 -- in Haskell to that API (version 2).
 --
--- NB: The use of the Google Static Maps API services is subject to the
--- <https://developers.google.com/maps/terms Google Maps APIs Terms of Service>,
--- which terms restrict the use of content.
+-- NB: The use of the Google Maps Static API services is subject to the
+-- <https://cloud.google.com/maps-platform/terms/ Google Maps Platform Terms of Service>,
+-- which terms restrict the use of content. End Users' use of Google Maps is
+-- subject to the then-current Google Maps/Google Earth Additional Terms of
+-- Service at <https://maps.google.com/help/terms_maps.html> and Google Privacy
+-- Policy at <https://www.google.com/policies/privacy/>.
 --
 -- The following are not yet implemented: non-PNG image formats; and encoded
 -- polyline paths.
 --
 -- The code below is an example console application to test the use of the
--- library with the Google Static Maps API.
+-- library with the Google Maps Static API.
 --
 -- > {-# LANGUAGE OverloadedStrings #-}
 -- >
@@ -37,14 +41,14 @@
 -- > import Graphics.Gloss.Juicy (fromDynamicImage)        -- package gloss-juicy
 -- > import Network.HTTP.Client (newManager)
 -- > import Network.HTTP.Client.TLS (tlsManagerSettings)
--- > import Web.Google.Static.Maps (Center (..), Key (..), Location (..), Size (..),
+-- > import Web.Google.Maps.Static (Center (..), Key (..), Location (..), Size (..),
 -- >     staticmap, StaticmapResponse (..), Zoom (..))
 -- >
 -- > main :: IO ()
 -- > main = do
--- >   putStrLn $ "A test of the Google Static Maps API.\nNB: The use of " ++
--- >     "the API services is subject to the Google Maps APIs Terms of " ++
--- >     "Serivce at https://developers.google.com/maps/terms.\n"
+-- >   putStrLn $ "A test of the Google Maps Static API.\nNB: The use of " ++
+-- >     "the API services is subject to the Google Maps Platform Terms of " ++
+-- >     "Serivce at https://cloud.google.com/maps-platform/terms/.\n"
 -- >   mgr <- newManager tlsManagerSettings
 -- >   let apiKey = Key "<REPLACE_THIS_WITH_YOUR_ACTUAL_GOOGLE_API_KEY>"
 -- >       -- If using a digital signature ...
@@ -60,15 +64,15 @@
 -- >   case result of
 -- >     Right response -> do
 -- >       let picture = fromJust $ fromDynamicImage response
--- >           title   = "Test Google Static Maps API"
+-- >           title   = "Test Google Maps Static API"
 -- >           window  = InWindow title (w, h) (10, 10)
 -- >       display window white picture
 -- >     Left err -> putStrLn $ "Error! Result:\n" ++ show err
-module Web.Google.Static.Maps
+module Web.Google.Maps.Static
        ( -- * Functions
          staticmap
          -- * API
-       , GoogleStaticMapsAPI
+       , GoogleMapsStaticAPI
        , api
          -- * Types
        , Key               (..)
@@ -554,8 +558,8 @@ newtype PathGeodesic = PathGeodesic Bool
 newtype Visible = Visible [Location]
     deriving (Eq, Show, ToHttpApiData)
 
--- | Google Static Maps API
-type GoogleStaticMapsAPI
+-- | Google Maps Static API
+type GoogleMapsStaticAPI
     =  "staticmap"
     :> QueryParam  "key"       Key
     :> QueryParam  "center"    Center
@@ -577,7 +581,7 @@ type GoogleStaticMapsAPI
 type StaticmapResponse = DynamicImage
 
 -- | API type
-api :: Proxy GoogleStaticMapsAPI
+api :: Proxy GoogleMapsStaticAPI
 api = Proxy
 
 staticmap'
@@ -598,8 +602,13 @@ staticmap'
     -> ClientM StaticmapResponse
 staticmap' = client api
 
--- | Retrieve a static map. NB: The use of the Google Static Maps API services
--- is subject to the <https://developers.google.com/maps/terms Google Maps APIs Terms of Service>.
+-- | Retrieve a static map. NB: The use of the Google Maps Static API services
+-- is subject to the
+-- <https://cloud.google.com/maps-platform/terms/ Google Maps Platform Terms of Service>.
+-- End Users' use of Google Maps is subject to the then-current Google
+-- Maps/Google Earth Additional Terms of Service at
+-- <https://maps.google.com/help/terms_maps.html> and Google Privacy Policy at
+-- <https://www.google.com/policies/privacy/>.
 staticmap
     :: Manager
     -> Key

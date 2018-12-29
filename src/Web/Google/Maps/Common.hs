@@ -6,8 +6,8 @@
 
 -- |
 -- Module      : Web.Google.Maps.Common
--- Description : Bindings to the Google Static Maps API
--- Copyright   : (c) Mike Pilgrem 2017
+-- Description : Common to the Google Maps Platform
+-- Copyright   : (c) Mike Pilgrem 2017, 2018
 -- Maintainer  : public@pilgrem.com
 -- Stability   : experimental
 --
@@ -77,13 +77,16 @@ newtype Address = Address Text
     deriving (Eq, Show, ToHttpApiData)
 
 -- | Language: supported languages based on the list at
--- <https://developers.google.com/maps/faq#languagesupport> (as at 13 March
--- 2017).
+-- <https://developers.google.com/maps/faq#languagesupport> (as at 29 December
+-- 2018).
 data Language
-    = Arabic
+    = Albanian
+    | Arabic
     | Basque
+    | Belarusian
     | Bengali
     | Bulgarian
+    | Burmese
     | Catalan
     | ChineseSimplified
     | ChineseTraditional
@@ -109,9 +112,12 @@ data Language
     | Italian
     | Japanese
     | Kannada
+    | Kazakh
     | Korean
+    | Kyrgyz
     | Latvian
     | Lithuanian
+    | Macedonian
     | Malayalam
     | Marathi
     | Norwegian
@@ -119,6 +125,7 @@ data Language
     | Portuguese
     | PortugueseBrazil
     | PortuguesePortugal
+    | Punjabi
     | Romanian
     | Russian
     | Serbian
@@ -132,15 +139,19 @@ data Language
     | Thai
     | Turkish
     | Ukrainian
+    | Uzbek
     | Vietnamese
     deriving (Eq, Show)
 
 instance ToHttpApiData Language where
     toUrlPiece language = case language of
+        Albanian           -> "sq"
         Arabic             -> "ar"
         Basque             -> "eu"
+        Belarusian         -> "be"
         Bengali            -> "bn"
         Bulgarian          -> "bg"
+        Burmese            -> "my"
         Catalan            -> "ca"
         ChineseSimplified  -> "zh-CN"
         ChineseTraditional -> "zh-TW"
@@ -166,9 +177,12 @@ instance ToHttpApiData Language where
         Italian            -> "it"
         Japanese           -> "ja"
         Kannada            -> "kn"
+        Kazakh             -> "kk"
         Korean             -> "ko"
+        Kyrgyz             -> "ky"
         Latvian            -> "lv"
         Lithuanian         -> "lt"
+        Macedonian         -> "mk"
         Malayalam          -> "ml"
         Marathi            -> "mr"
         Norwegian          -> "no"
@@ -176,6 +190,7 @@ instance ToHttpApiData Language where
         Portuguese         -> "pt"
         PortugueseBrazil   -> "pt-BR"
         PortuguesePortugal -> "pt-PT"
+        Punjabi            -> "pa"
         Romanian           -> "ro"
         Russian            -> "ru"
         Serbian            -> "sr"
@@ -189,6 +204,7 @@ instance ToHttpApiData Language where
         Thai               -> "th"
         Turkish            -> "tr"
         Ukrainian          -> "uk"
+        Uzbek              -> "uz"
         Vietnamese         -> "vi"
 
 -- | Region: a ccTLD (country code top level domain).
@@ -702,6 +718,6 @@ instance ToHttpApiData Region where
         UK -> "uk" -- United Kingdom of Great Britain and Northern Ireland
         EU -> "eu" -- European Union
 
--- | The base URL for the Google Maps APIs.
+-- | The base URL for the Google Maps Platform APIs.
 googleMapsApis :: BaseUrl
 googleMapsApis = BaseUrl Https "maps.googleapis.com" 443 "/maps/api"

@@ -1,3 +1,12 @@
+# 0.6.0.0
+
+* Update documentation to reflect changes to Google Maps Platform
+
+* Rename module `Web.Google.Static.Maps` as `Web.Google.Maps.Static` and
+  `GoogleStaticMapsAPI` as `GoogleMapsStaticAPI`
+
+* Update `Web.Google.Maps.Common.Language` data constructors
+
 # 0.5.0.3
 
 * Update dependencies for GHC 8.6.1
