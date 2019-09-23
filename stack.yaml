@@ -1,12 +1,6 @@
-resolver: nightly-2018-12-17
+resolver: nightly-2019-10-04
 packages:
 - '.'
-extra-deps:
-- http-api-data-0.4
-- QuickCheck-2.12.6.1
-- servant-0.15
-- servant-client-0.15
-- servant-client-core-0.15
-- servant-server-0.15
+extra-deps: []
 flags: {}
 extra-package-dbs: []

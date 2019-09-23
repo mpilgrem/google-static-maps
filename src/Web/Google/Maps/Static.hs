@@ -131,7 +131,7 @@ import Network.URI (URI (..), URIAuth (..), uriToString)
 import Servant.API ((:>), Get, QueryParam, QueryParams, safeLink,
     ToHttpApiData (..))
 import Servant.Client (BaseUrl (..), client, ClientEnv (ClientEnv), ClientM,
-    runClientM, ServantError)
+    runClientM, ClientError)
 import Servant.JuicyPixels (PNG)
 import Servant.Links (LinkArrayElementStyle (..), linkURI')
 import Text.Bytedump (hexString)
@@ -625,7 +625,7 @@ staticmap
     -> [Markers]
     -> [Path]
     -> Maybe Visible
-    -> IO (Either ServantError StaticmapResponse)
+    -> IO (Either ClientError StaticmapResponse)
 staticmap
     mgr
     key

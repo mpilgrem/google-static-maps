@@ -1,3 +1,7 @@
+# 0.6.0.1
+
+* Update dependencies for GHC 8.8.1
+
 # 0.6.0.0
 
 * Update documentation to reflect changes to Google Maps Platform
