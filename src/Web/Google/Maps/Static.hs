@@ -132,6 +132,9 @@ import Servant.API ((:>), Get, QueryParam, QueryParams, safeLink,
     ToHttpApiData (..))
 import Servant.Client (BaseUrl (..), client, ClientEnv (ClientEnv), ClientM,
     runClientM, ClientError)
+#if MIN_VERSION_servant_client(0,17,0)
+import Servant.Client (defaultMakeClientRequest)
+#endif
 import Servant.JuicyPixels (PNG)
 import Servant.Links (LinkArrayElementStyle (..), linkURI')
 import Text.Bytedump (hexString)
@@ -644,8 +647,14 @@ staticmap
     visibleOpt
     = case secretOpt of
           Nothing -> runClientM (eval staticmap' Nothing)
+-- makeClientRequest supported from servant-client-0.17
+#if MIN_VERSION_servant_client(0,17,0)
+                                (ClientEnv mgr
+                                           googleMapsApis
+                                           Nothing
+                                           defaultMakeClientRequest)
 -- CookieJar supported from servant-client-0.13
-#if MIN_VERSION_servant_client(0,13,0)
+#elif MIN_VERSION_servant_client(0,13,0)
                                 (ClientEnv mgr googleMapsApis Nothing)
 #else
                                 (ClientEnv mgr googleMapsApis)
@@ -654,8 +663,14 @@ staticmap
               let url = linkURI $ eval (safeLink api api) Nothing
                   signatureOpt = sign secret googleMapsApis url
               runClientM (eval staticmap' signatureOpt)
+-- makeClientRequest supported from servant-client-0.17
+#if MIN_VERSION_servant_client(0,17,0)
+                         (ClientEnv mgr
+                                    googleMapsApis
+                                    Nothing
+                                    defaultMakeClientRequest)
 -- CookieJar supported from servant-client-0.13
-#if MIN_VERSION_servant_client(0,13,0)
+#elif MIN_VERSION_servant_client(0,13,0)
                          (ClientEnv mgr googleMapsApis Nothing)
 #else
                          (ClientEnv mgr googleMapsApis)

@@ -1,3 +1,7 @@
+# 0.6.0.2
+
+* Update dependencies for GHC 8.10.3 and revisit upper bounds
+
 # 0.6.0.1
 
 * Update dependencies for GHC 8.8.1

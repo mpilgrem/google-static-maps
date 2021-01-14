@@ -1,6 +1,7 @@
-resolver: nightly-2019-10-04
+resolver: lts-17.15
 packages:
 - '.'
-extra-deps: []
+extra-deps:
+- servant-JuicyPixels-0.3.0.6@sha256:0c2e27ad5e472b1062da07d9d2e6eceb77e96bef43a305f35e5644edc4ced676,1311
 flags: {}
 extra-package-dbs: []
