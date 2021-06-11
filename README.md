@@ -1,4 +1,4 @@
-# google-static-maps
+# google-static-maps [![GitHub CI](https://github.com/mpilgrem/google-static-maps/workflows/CI/badge.svg)](https://github.com/mpilgrem/google-static-maps/actions)
 Haskell bindings to the Google Maps Static API (formerly Static Maps API)
 
 This respository has no connection with Google Inc. or its affiliates.
