@@ -1,6 +1,7 @@
-# 0.6.0.2
+# 0.7.0.0
 
-* Update dependencies for GHC 8.10.3 and revisit upper bounds
+* Add additional languages
+* Update dependencies for GHC 8.10.4 and revisit upper bounds
 
 # 0.6.0.1
 

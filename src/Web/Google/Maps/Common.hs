@@ -7,7 +7,7 @@
 -- |
 -- Module      : Web.Google.Maps.Common
 -- Description : Common to the Google Maps Platform
--- Copyright   : (c) Mike Pilgrem 2017, 2018
+-- Copyright   : (c) Mike Pilgrem 2017, 2018, 2021
 -- Maintainer  : public@pilgrem.com
 -- Stability   : experimental
 --
@@ -77,49 +77,65 @@ newtype Address = Address Text
     deriving (Eq, Show, ToHttpApiData)
 
 -- | Language: supported languages based on the list at
--- <https://developers.google.com/maps/faq#languagesupport> (as at 29 December
--- 2018).
+-- <https://developers.google.com/maps/faq#languagesupport> (as at 12 June
+-- 2021).
 data Language
-    = Albanian
+    = Afrikaans -- ^ @since 0.7.0.0
+    | Albanian
+    | Amharic -- ^ @since 0.7.0.0
     | Arabic
+    | Armenian -- ^ @since 0.7.0.0
+    | Azerbaijani -- ^ @since 0.7.0.0
     | Basque
     | Belarusian
     | Bengali
+    | Bosnian -- ^ @since 0.7.0.0
     | Bulgarian
     | Burmese
     | Catalan
+    | Chinese -- ^ @since 0.7.0.0
     | ChineseSimplified
+    | ChineseHongKong -- ^ @since 0.7.0.0
     | ChineseTraditional
     | Croatian
     | Czech
     | Danish
     | Dutch
-    | German
-    | Greek
     | English
     | EnglishAustralian
     | EnglishBritish
+    | Estonian -- ^ @since 0.7.0.0
     | Farsi
     | Filipino
     | Finnish
     | French
+    | FrenchCanadian -- ^ @since 0.7.0.0
     | Galician
+    | Georgian -- ^ @since 0.7.0.0
+    | German
+    | Greek
     | Gujarati
     | Hebrew
     | Hindi
+    | Icelandic -- ^ @since 0.7.0.0
     | Hungarian
     | Indonesian
     | Italian
     | Japanese
     | Kannada
     | Kazakh
+    | Khmer -- ^ @since 0.7.0.0
     | Korean
     | Kyrgyz
+    | Lao -- ^ @since 0.7.0.0
     | Latvian
     | Lithuanian
     | Macedonian
+    | Malay -- ^ @since 0.7.0.0
     | Malayalam
     | Marathi
+    | Mongolian -- ^ @since 0.7.0.0
+    | Nepali -- ^ @since 0.7.0.0
     | Norwegian
     | Polish
     | Portuguese
@@ -129,83 +145,109 @@ data Language
     | Romanian
     | Russian
     | Serbian
+    | Sinhalese -- ^ @since 0.7.0.0
     | Slovak
     | Slovenian
     | Spanish
+    | SpanishLatinAmerican -- ^ @since 0.7.0.0
+    | Swahili -- ^ @since 0.7.0.0
     | Swedish
-    | Tagalog
+    | Tagalog -- ^ No longer listed by Google at 12 June 2021. See 'Filipino'.
     | Tamil
     | Telugu
     | Thai
     | Turkish
     | Ukrainian
+    | Urdu -- ^ @since 0.7.0.0
     | Uzbek
     | Vietnamese
+    | Zulu -- ^ @since 0.7.0.0
     deriving (Eq, Show)
 
 instance ToHttpApiData Language where
     toUrlPiece language = case language of
-        Albanian           -> "sq"
-        Arabic             -> "ar"
-        Basque             -> "eu"
-        Belarusian         -> "be"
-        Bengali            -> "bn"
-        Bulgarian          -> "bg"
-        Burmese            -> "my"
-        Catalan            -> "ca"
-        ChineseSimplified  -> "zh-CN"
-        ChineseTraditional -> "zh-TW"
-        Croatian           -> "hr"
-        Czech              -> "cs"
-        Danish             -> "da"
-        Dutch              -> "nl"
-        German             -> "de"
-        Greek              -> "el"
-        English            -> "en"
-        EnglishAustralian  -> "en-AU"
-        EnglishBritish     -> "en-GB"
-        Farsi              -> "fa"
-        Filipino           -> "fil"
-        Finnish            -> "fi"
-        French             -> "fr"
-        Galician           -> "gl"
-        Gujarati           -> "gu"
-        Hebrew             -> "iw"
-        Hindi              -> "hi"
-        Hungarian          -> "hu"
-        Indonesian         -> "id"
-        Italian            -> "it"
-        Japanese           -> "ja"
-        Kannada            -> "kn"
-        Kazakh             -> "kk"
-        Korean             -> "ko"
-        Kyrgyz             -> "ky"
-        Latvian            -> "lv"
-        Lithuanian         -> "lt"
-        Macedonian         -> "mk"
-        Malayalam          -> "ml"
-        Marathi            -> "mr"
-        Norwegian          -> "no"
-        Polish             -> "pl"
-        Portuguese         -> "pt"
-        PortugueseBrazil   -> "pt-BR"
-        PortuguesePortugal -> "pt-PT"
-        Punjabi            -> "pa"
-        Romanian           -> "ro"
-        Russian            -> "ru"
-        Serbian            -> "sr"
-        Slovak             -> "sk"
-        Slovenian          -> "sl"
-        Spanish            -> "es"
-        Swedish            -> "sv"
-        Tagalog            -> "tl"
-        Tamil              -> "ta"
-        Telugu             -> "te"
-        Thai               -> "th"
-        Turkish            -> "tr"
-        Ukrainian          -> "uk"
-        Uzbek              -> "uz"
-        Vietnamese         -> "vi"
+        Afrikaans            -> "af"
+        Albanian             -> "sq"
+        Amharic              -> "am"
+        Arabic               -> "ar"
+        Armenian             -> "hy"
+        Azerbaijani          -> "az"
+        Basque               -> "eu"
+        Belarusian           -> "be"
+        Bengali              -> "bn"
+        Bosnian              -> "bs"
+        Bulgarian            -> "bg"
+        Burmese              -> "my"
+        Catalan              -> "ca"
+        Chinese              -> "zh"
+        ChineseSimplified    -> "zh-CN"
+        ChineseHongKong      -> "zh-HK"
+        ChineseTraditional   -> "zh-TW"
+        Croatian             -> "hr"
+        Czech                -> "cs"
+        Danish               -> "da"
+        Dutch                -> "nl"
+        English              -> "en"
+        EnglishAustralian    -> "en-AU"
+        EnglishBritish       -> "en-GB"
+        Estonian             -> "et"
+        Farsi                -> "fa"
+        Filipino             -> "fil"
+        Finnish              -> "fi"
+        French               -> "fr"
+        FrenchCanadian       -> "fr-CA"
+        Galician             -> "gl"
+        Georgian             -> "ka"
+        German               -> "de"
+        Greek                -> "el"
+        Gujarati             -> "gu"
+        Hebrew               -> "iw"
+        Hindi                -> "hi"
+        Hungarian            -> "hu"
+        Icelandic            -> "is"
+        Indonesian           -> "id"
+        Italian              -> "it"
+        Japanese             -> "ja"
+        Kannada              -> "kn"
+        Kazakh               -> "kk"
+        Khmer                -> "km"
+        Korean               -> "ko"
+        Kyrgyz               -> "ky"
+        Lao                  -> "lo"
+        Latvian              -> "lv"
+        Lithuanian           -> "lt"
+        Macedonian           -> "mk"
+        Malay                -> "ms"
+        Malayalam            -> "ml"
+        Marathi              -> "mr"
+        Mongolian            -> "mn"
+        Nepali               -> "ne"
+        Norwegian            -> "no"
+        Polish               -> "pl"
+        Portuguese           -> "pt"
+        PortugueseBrazil     -> "pt-BR"
+        PortuguesePortugal   -> "pt-PT"
+        Punjabi              -> "pa"
+        Romanian             -> "ro"
+        Russian              -> "ru"
+        Serbian              -> "sr"
+        Sinhalese            -> "si"
+        Slovak               -> "sk"
+        Slovenian            -> "sl"
+        Spanish              -> "es"
+        SpanishLatinAmerican -> "es-419"
+        Swahili              -> "sw"
+        Swedish              -> "sv"
+        Tagalog              -> "tl"
+        Tamil                -> "ta"
+        Telugu               -> "te"
+        Thai                 -> "th"
+        Turkish              -> "tr"
+        Ukrainian            -> "uk"
+        Urdu                 -> "ur"
+        Uzbek                -> "uz"
+        Vietnamese           -> "vi"
+        Zulu                 -> "zu"
 
 -- | Region: a ccTLD (country code top level domain).
 data Region
