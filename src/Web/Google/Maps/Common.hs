@@ -77,8 +77,8 @@ newtype Address = Address Text
     deriving (Eq, Show, ToHttpApiData)
 
 -- | Language: supported languages based on the list at
--- <https://developers.google.com/maps/faq#languagesupport> (as at 12 June
--- 2021).
+-- <https://developers.google.com/maps/faq#languagesupport> (as at 20 March
+-- 2022).
 data Language
     = Afrikaans -- ^ @since 0.7.0.0
     | Albanian
