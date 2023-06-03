@@ -1,3 +1,6 @@
-resolver: nightly-2022-10-11
-packages:
-- '.'
+resolver: lts-20.23 # GHC 9.2.7
+compiler: ghc-9.2.8 # No Stackage snapshot as at 2023-06-03
+
+flags:
+  ansi-terminal:
+    win32-2-13-1: false

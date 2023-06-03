@@ -1,5 +1,5 @@
 name:                google-static-maps
-version:             0.7.0.1
+version:             0.7.0.2
 synopsis:            Bindings to the Google Maps Static API (formerly Static
                      Maps API)
 description:         The
@@ -28,13 +28,14 @@ copyright:           Mike Pilgrem
 category:            Web
 build-type:          Simple
 extra-source-files:  changelog.md
+                     stack.yaml
 cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
   exposed-modules:     Web.Google.Maps.Static
                      , Web.Google.Maps.Common
-  build-depends:       base >= 4.8 && < 4.18
+  build-depends:       base >= 4.8 && < 4.17
                      , aeson >= 0.7 && < 2.2
                      , base64-bytestring >= 0.1.1 && < 1.3
                      , bytedump >= 0.9 && < 1.1
