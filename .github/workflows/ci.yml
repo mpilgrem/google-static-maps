@@ -16,7 +16,7 @@ jobs:
         cabal: ["3.8"]
         ghc:
           - "9.0.2"
-          - "9.2.8"
+          - "9.2.7"
     steps:
       - uses: actions/checkout@v2
       - uses: haskell/actions/setup@v2.0.1
@@ -43,7 +43,7 @@ jobs:
         cabal: ["3.8"]
         ghc:
           - "9.0.2"
-          - "9.2.8"
+          - "9.2.7"
         winio: [false]
     steps:
       - uses: actions/checkout@v2
