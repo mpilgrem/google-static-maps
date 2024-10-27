@@ -4,7 +4,7 @@ Haskell bindings to the Google Maps Static API (formerly Static Maps API)
 This respository has no connection with Google Inc. or its affiliates.
 
 The
-[Google Maps Static API](https://developers.google.com/maps/documentation/maps-static/intro)
+[Google Maps Static API](https://developers.google.com/maps/documentation//intro)
 returns a map as an image via an HTTP request. This library provides bindings in
 Haskell to that API.
 
